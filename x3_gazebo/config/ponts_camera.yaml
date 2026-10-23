@@ -1,0 +1,25 @@
+# Caméra simulée : lue par camera_sim.py.
+
+- ros_topic_name: /x3_sim/camera/color/image_raw
+  gz_topic_name: /x3_cam/color/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/camera/color/camera_info
+  gz_topic_name: /x3_cam/color/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/camera/depth/image_raw
+  gz_topic_name: /x3_cam/depth/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/camera/depth/camera_info
+  gz_topic_name: /x3_cam/depth/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS

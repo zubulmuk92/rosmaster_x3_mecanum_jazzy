@@ -1,0 +1,11 @@
+# Code tiers, versions figées. Depuis la racine de l'espace de travail :
+#   vcs import src < src/rosmaster_x3_mecanum_jazzy/dependencies.repos
+repositories:
+  tiers/sllidar_ros2:
+    type: git
+    url: https://github.com/Slamtec/sllidar_ros2.git
+    version: 34300099fadfc772965962dec837bf436706188f   # pilote officiel Slamtec du lidar RPLidar A1M8 (BSD-2-Clause)
+  tiers/OrbbecSDK_ROS2:
+    type: git
+    url: https://github.com/orbbec/OrbbecSDK_ROS2.git
+    version: v1.5.22   # pilote officiel Orbbec (Apache-2.0), branche v1 : gère l'Astra Pro Plus (caméras OpenNI)

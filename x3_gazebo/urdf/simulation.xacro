@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!-- Capteurs et moteurs simulés du X3, inclus par x3_description/urdf/x3.urdf.xacro avec simulation:=true.
+     Plugin mécanum avec les noms
+     d'articulations du modèle unique (back_* au lieu de rear_*) et le rayon des pièces 3D (0,0323 au lieu de 0,0325).
+     Caméra (rendu coûteux) seulement avec camera:=true. Topics Gazebo convertis par config/ponts*.yaml. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" xmlns:gz="http://gazebosim.org/schema">
+  <xacro:arg name="camera" default="false"/>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <topic>/imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="laser_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <!-- RPLidar A1M8 du vrai X3 (mesuré le 23/10, pilote Slamtec sllidar_ros2) : ~7,2-7,7 tours/s, 1080 points
+           sur 360°, 0,05 à 12 m -->
+      <update_rate>7.5</update_rate>
+      <topic>/scan</topic>
+      <gz_frame_id>laser_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>1080</samples>
+            <resolution>1</resolution>
+            <min_angle>${-PI}</min_angle>
+            <max_angle>${PI - 2*PI/1080}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <!-- 0,12 et non 0,05 (A1 réel) : la pièce 3D Yahboom du lidar met son boîtier dans le plan de mesure (le
+               lidar simulé se voyait à 5-6 cm sur 60° vers l'arrière et bloquait Nav2, 23/10) ; le vrai A1 mesure
+               au-dessus de son boîtier -->
+          <min>0.12</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+  <xacro:if value="$(arg camera)">
+    <gazebo reference="camera_link">
+      <sensor name="camera_color" type="camera">
+        <pose>-0.0014 0.0251 0.0002 -0.0052 0.0070 0.0004</pose>
+        <always_on>true</always_on>
+        <update_rate>30</update_rate>
+        <topic>/x3_cam/color/image</topic>
+        <gz_frame_id>camera_color_optical_frame</gz_frame_id>
+        <camera>
+          <horizontal_fov>1.0619</horizontal_fov>
+          <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+          <clip><near>0.05</near><far>10.0</far></clip>
+          <lens><intrinsics><fx>545.0</fx><fy>545.0</fy><cx>318.27</cx><cy>234.12</cy><s>0</s></intrinsics></lens>
+        </camera>
+      </sensor>
+      <sensor name="camera_depth" type="depth_camera">
+        <always_on>true</always_on>
+        <update_rate>30</update_rate>
+        <topic>/x3_cam/depth/image</topic>
+        <gz_frame_id>camera_depth_optical_frame</gz_frame_id>
+        <camera>
+          <horizontal_fov>1.0182</horizontal_fov>
+          <image><width>640</width><height>480</height><format>R_FLOAT32</format></image>
+          <clip><near>0.6</near><far>8.0</far></clip>
+          <lens><intrinsics><fx>573.32</fx><fy>573.32</fy><cx>316.98</cx><cy>231.84</cy><s>0</s></intrinsics></lens>
+        </camera>
+      </sensor>
+    </gazebo>
+  </xacro:if>
+
+  <gazebo>
+    <plugin filename="gz-sim-mecanum-drive-system" name="gz::sim::systems::MecanumDrive">
+      <front_left_joint>front_left_wheel_joint</front_left_joint>
+      <front_right_joint>front_right_wheel_joint</front_right_joint>
+      <back_left_joint>back_left_wheel_joint</back_left_joint>
+      <back_right_joint>back_right_wheel_joint</back_right_joint>
+      <wheel_separation>0.169</wheel_separation>
+      <wheelbase>0.16</wheelbase>
+      <wheel_radius>0.0323</wheel_radius>
+      <topic>/model/rosmaster_x3/cmd_vel</topic>
+      <odom_topic>/model/rosmaster_x3/odom</odom_topic>
+      <tf_topic>/model/rosmaster_x3/tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+  </gazebo>
+</robot>

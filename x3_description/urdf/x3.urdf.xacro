@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  Modèle unique du Yahboom ROSMASTER X3 (base mécanum, lidar RPLidar A1M8, caméra Orbbec Astra Pro Plus), utilisé par
+  le vrai robot, la simulation Gazebo (x3_gazebo l'inclut avec simulation:=true) et RViz.
+  Repères REP-105 : base_footprint (sol) -> base_link -> capteurs et roues.
+
+  Géométrie : dimensions mesurées sur la CAO du fabricant (roues de 64,6 mm de diamètre, empattement 0,16 m, voie
+  0,169 m, position des capteurs), dessinées en formes simples. Les pièces 3D du fabricant ne font pas partie du
+  dépôt (pas de licence) ; pieces_yahboom:=true les utilise si deploy/recuperer_yahboom.sh les a copiées localement
+  (vrai robot et RViz seulement : la simulation garde toujours les formes simples).
+  Masses : estimations (corps 2,5 kg, roues 0,15 kg), celles avec lesquelles la simulation a été validée.
+  base_link est à 0,0712 m du sol : axe des roues 0,0389 m sous base_link, plus le rayon des roues (0,0323 m).
+  Le lidar est monté tourné de 180° : son repère de mesure « laser » a un lacet de π sous laser_link.
+  Les repères optiques de la caméra font partie du modèle (valeurs lues sur l'Astra Pro Plus du robot) : le pilote
+  de la caméra ne doit pas les publier.
+-->
+<robot name="rosmaster_x3" xmlns:xacro="http://www.ros.org/wiki/xacro" xmlns:gz="http://gazebosim.org/schema">
+
+  <xacro:arg name="simulation" default="false"/>
+  <xacro:arg name="pieces_yahboom" default="false"/>
+  <!-- Arguments acceptés en true / True / false / False -->
+  <xacro:property name="sim" value="${'$(arg simulation)'.lower() == 'true'}"/>
+  <xacro:property name="cao" value="${'$(arg pieces_yahboom)'.lower() == 'true' and not sim}"/>
+  <xacro:property name="dossier_cao" value="package://x3_description/meshes/yahboom"/>
+
+  <xacro:property name="PI" value="3.141592653589793"/>
+  <xacro:property name="hauteur_base" value="0.0712"/>   <!-- base_footprint -> base_link -->
+  <xacro:property name="rayon_roue" value="0.0323"/>
+  <xacro:property name="largeur_roue" value="0.03"/>
+  <xacro:property name="z_roues" value="-0.0389"/>      <!-- axe des roues sous base_link -->
+  <xacro:property name="x_roues" value="0.08"/>         <!-- demi-empattement -->
+  <xacro:property name="y_roues" value="0.0845"/>       <!-- demi-voie -->
+
+  <material name="vert"><color rgba="0 0.7 0 1"/></material>
+  <material name="gris"><color rgba="0.7 0.7 0.7 1"/></material>
+
+  <xacro:macro name="inertie_boite" params="m x y z xyz:='0 0 0'">
+    <inertial>
+      <origin xyz="${xyz}"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0" iyy="${m*(x*x+z*z)/12}" iyz="0" izz="${m*(x*x+y*y)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Corps -->
+  <link name="base_footprint"/>
+  <link name="base_link">
+    <xacro:inertie_boite m="2.5" x="0.22" y="0.12" z="0.05" xyz="0.005 0 -0.0119"/>
+    <visual>
+      <xacro:if value="${cao}">
+        <geometry><mesh filename="${dossier_cao}/base_link_X3_sans_ecran.STL"/></geometry>
+      </xacro:if>
+      <xacro:unless value="${cao}">
+        <origin xyz="0 0 -0.0037"/>
+        <geometry><box size="0.22 0.12 0.05"/></geometry>
+      </xacro:unless>
+      <material name="vert"/>
+    </visual>
+    <xacro:unless value="${cao}">  <!-- plateau supérieur qui porte le lidar (affichage seulement, sous le plan du lidar) -->
+      <visual>
+        <origin xyz="0.0 0 0.073"/>
+        <geometry><box size="0.20 0.12 0.004"/></geometry>
+        <material name="vert"/>
+      </visual>
+    </xacro:unless>
+    <collision>
+      <origin xyz="0 0 -0.0037"/>
+      <geometry><box size="0.22 0.12 0.05"/></geometry>
+    </collision>
+  </link>
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${hauteur_base}"/>
+  </joint>
+
+  <!-- IMU de la carte d'extension STM32 (montée retournée, tournée de 90°) -->
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="-0.06 0.01 0.01" rpy="0 3.1415 1.5707"/>
+  </joint>
+
+  <!-- Roues mécanum, montage en X vu de dessus. Axe y : rotation positive = vers l'avant.
+       Simulation : Gazebo n'a pas de galets, chaque roue est une sphère qui n'adhère que dans la direction de ses
+       galets (fdir1 exprimé dans base_footprint, mu2 = 0). -->
+  <xacro:macro name="roue" params="name x y fdir fichier_cao rpy_cao">
+    <link name="${name}">
+      <inertial>
+        <mass value="0.15"/>
+        <inertia ixx="${0.15*(3*rayon_roue*rayon_roue+largeur_roue*largeur_roue)/12}" ixy="0" ixz="0"
+                 iyy="${0.15*rayon_roue*rayon_roue/2}" iyz="0"
+                 izz="${0.15*(3*rayon_roue*rayon_roue+largeur_roue*largeur_roue)/12}"/>
+      </inertial>
+      <visual>
+        <xacro:if value="${cao}">
+          <origin rpy="${rpy_cao}"/>
+          <geometry><mesh filename="${dossier_cao}/${fichier_cao}"/></geometry>
+        </xacro:if>
+        <xacro:unless value="${cao}">
+          <origin rpy="${PI/2} 0 0"/>
+          <geometry><cylinder radius="${rayon_roue}" length="${largeur_roue}"/></geometry>
+        </xacro:unless>
+        <material name="gris"/>
+      </visual>
+      <collision>
+        <xacro:if value="${sim}"><geometry><sphere radius="${rayon_roue}"/></geometry></xacro:if>
+        <xacro:unless value="${sim}">
+          <origin rpy="${PI/2} 0 0"/>
+          <geometry><cylinder radius="${rayon_roue}" length="${largeur_roue}"/></geometry>
+        </xacro:unless>
+      </collision>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${name}"/>
+      <origin xyz="${x} ${y} ${z_roues}"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.001" friction="0.0"/>
+    </joint>
+    <xacro:if value="${sim}">
+      <gazebo reference="${name}">
+        <collision><surface><friction><ode>
+          <mu>1.0</mu><mu2>0.0</mu2><fdir1 gz:expressed_in="base_footprint">${fdir}</fdir1>
+        </ode></friction></surface></collision>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+  <xacro:roue name="front_left_wheel" x="${x_roues}" y="${y_roues}" fdir="1 -1 0"
+               fichier_cao="front_left_wheel_X3.STL" rpy_cao="1.5703 0 0"/>
+  <xacro:roue name="front_right_wheel" x="${x_roues}" y="${-y_roues}" fdir="1 1 0"
+               fichier_cao="front_right_wheel_X3.STL" rpy_cao="-1.5703 0 3.14159"/>
+  <xacro:roue name="back_left_wheel" x="${-x_roues}" y="${y_roues}" fdir="1 1 0"
+               fichier_cao="back_left_wheel_X3.STL" rpy_cao="1.5703 0 0"/>
+  <xacro:roue name="back_right_wheel" x="${-x_roues}" y="${-y_roues}" fdir="1 -1 0"
+               fichier_cao="back_right_wheel_X3.STL" rpy_cao="-1.57 0 3.14159"/>
+
+  <!-- RPLidar A1M8 : laser_link = boîtier, laser = repère des mesures (/scan), tourné de 180° -->
+  <link name="laser_link">
+    <xacro:inertie_boite m="0.17" x="0.07" y="0.07" z="0.04"/>
+    <visual>
+      <xacro:if value="${cao}"><geometry><mesh filename="${dossier_cao}/laser_link.STL"/></geometry></xacro:if>
+      <xacro:unless value="${cao}">
+        <origin xyz="0 0 -0.015"/>
+        <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+      </xacro:unless>
+      <material name="gris"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.015"/>
+      <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+    </collision>
+  </link>
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+    <origin xyz="0.0435 0.0000526 0.11"/>
+  </joint>
+  <link name="laser"/>
+  <joint name="laser_frame_joint" type="fixed">
+    <parent link="laser_link"/>
+    <child link="laser"/>
+    <origin rpy="0 0 ${PI}"/>
+  </joint>
+
+  <!-- Orbbec Astra Pro Plus : camera_link = boîtier (= capteur de profondeur) ; capteur couleur 2,5 cm à gauche -->
+  <link name="camera_link">
+    <xacro:inertie_boite m="0.1" x="0.03" y="0.16" z="0.03"/>
+    <visual>
+      <xacro:if value="${cao}"><geometry><mesh filename="${dossier_cao}/camera_link.STL"/></geometry></xacro:if>
+      <xacro:unless value="${cao}"><geometry><box size="0.03 0.16 0.03"/></geometry></xacro:unless>
+      <material name="gris"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.03 0.16 0.03"/></geometry>
+    </collision>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.057105 0.000018 0.03755"/>
+  </joint>
+  <xacro:macro name="repere_camera" params="name xyz rpy">
+    <link name="camera_${name}_frame"/>
+    <joint name="camera_${name}_joint" type="fixed">
+      <parent link="camera_link"/>
+      <child link="camera_${name}_frame"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+    <link name="camera_${name}_optical_frame"/>
+    <joint name="camera_${name}_optical_joint" type="fixed">
+      <parent link="camera_${name}_frame"/>
+      <child link="camera_${name}_optical_frame"/>
+      <origin rpy="${-PI/2} 0 ${-PI/2}"/>
+    </joint>
+  </xacro:macro>
+  <xacro:repere_camera name="color" xyz="-0.0014054 0.0251323 0.000197" rpy="-0.0051697 0.0069873 0.0003504"/>
+  <xacro:repere_camera name="depth" xyz="0 0 0" rpy="0 0 0"/>
+
+  <xacro:if value="${sim}">
+    <xacro:include filename="$(find x3_gazebo)/urdf/simulation.xacro"/>
+  </xacro:if>
+
+</robot>

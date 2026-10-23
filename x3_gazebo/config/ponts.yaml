@@ -1,0 +1,32 @@
+# Ponts ROS 2 <-> Gazebo de la simulation du X3 : la carte simulée
+# (x3_base carte:=simulation) lit /x3_sim/odom et /x3_sim/imu et commande /x3_sim/cmd_vel ; lidar_sim.py lit /x3_sim/scan.
+
+- ros_topic_name: /clock
+  gz_topic_name: /clock
+  ros_type_name: rosgraph_msgs/msg/Clock
+  gz_type_name: gz.msgs.Clock
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/cmd_vel
+  gz_topic_name: /model/rosmaster_x3/cmd_vel
+  ros_type_name: geometry_msgs/msg/Twist
+  gz_type_name: gz.msgs.Twist
+  direction: ROS_TO_GZ
+
+- ros_topic_name: /x3_sim/odom
+  gz_topic_name: /model/rosmaster_x3/odom
+  ros_type_name: nav_msgs/msg/Odometry
+  gz_type_name: gz.msgs.Odometry
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/scan
+  gz_topic_name: /scan
+  ros_type_name: sensor_msgs/msg/LaserScan
+  gz_type_name: gz.msgs.LaserScan
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /x3_sim/imu
+  gz_topic_name: /imu
+  ros_type_name: sensor_msgs/msg/Imu
+  gz_type_name: gz.msgs.IMU
+  direction: GZ_TO_ROS

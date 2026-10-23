@@ -1,0 +1,5 @@
+# Produits de compilation et fichiers de travail (jamais versionnés)
+__pycache__/
+*.pyc
+node_modules/
+journaux/

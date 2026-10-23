@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: Apache-2.0
+// Architecture du projet : dot -Tpng -Gdpi=150 architecture.dot -o architecture.png
+digraph x3 {
+  rankdir=TB; newrank=true; nodesep=0.35; ranksep=0.45;
+  node [shape=box, fontname="Calibri", fontsize=11, style="solid", color=black];
+  edge [fontname="Calibri", fontsize=9, color=black];
+
+  subgraph cluster_materiel {
+    label="Matériel : vrai robot (materiel:=reel)"; fontname="Calibri"; fontsize=11; style=solid;
+    carte [label="Carte STM32\n(liaison série,\nRosmaster_Lib Yahboom)"];
+    a1 [label="Lidar RPLidar A1M8"];
+    astra [label="Caméra Astra Pro Plus"];
+  }
+  subgraph cluster_simu {
+    label="OU simulation Gazebo (materiel:=simulation) : x3_gazebo"; fontname="Calibri"; fontsize=11; style=dashed;
+    carte_sim [label="Rosmaster_Lib simulée\n(mêmes fonctions et unités)"];
+    lidar_sim [label="lidar_sim\n(mêmes topic, repère, cadence)"];
+    camera_sim [label="camera_sim\n(mêmes topics, calibration)"];
+  }
+
+  base [label="x3_base\n(moteurs, odométrie, IMU, batterie)", penwidth=2];
+  sllidar [label="sllidar_ros2\n(Slamtec, officiel)"];
+  astra_drv [label="orbbec_camera\n(Orbbec, officiel)"];
+  desc [label="x3_description\n(modèle unique, robot_state_publisher)", penwidth=2];
+  loc [label="x3_bringup : localisation\n(Madgwick + EKF)", penwidth=2];
+  nav [label="x3_navigation\n(Nav2 MPPI, STVL, cartographie)", penwidth=2];
+  teleop [label="x3_teleop\n(clavier ZQSD, manette)", penwidth=2];
+  ihm [label="x3_hmi\n(IHM web, rosbridge)", penwidth=2];
+
+  carte -> base [label=" série"]; carte_sim -> base [style=dashed];
+  a1 -> sllidar; lidar_sim -> sllidar [style=invis];
+  astra -> astra_drv; camera_sim -> astra_drv [style=invis];
+
+  base -> loc [label=" /odom_raw\n /imu/data_raw"];
+  base -> desc [label=" /joint_states"];
+  sllidar -> nav [label=" /scan"];
+  lidar_sim -> nav [style=dashed, label=" /scan"];
+  astra_drv -> nav [label=" /camera/depth/points"];
+  camera_sim -> nav [style=dashed];
+  loc -> nav [label=" /odom\n TF odom→base_footprint"];
+  desc -> nav [label=" TF base_footprint→capteurs"];
+  nav -> base [label=" /cmd_vel"];
+  teleop -> base [label=" /cmd_vel"];
+  ihm -> nav [label=" objectif\n(action)"];
+  astra_drv -> ihm [label=" images"];
+
+  { rank=same; carte; a1; astra; }
+  { rank=same; carte_sim; lidar_sim; camera_sim; }
+  { rank=same; base; sllidar; astra_drv; }
+}

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.8)
+project(x3_navigation)
+find_package(ament_cmake REQUIRED)
+install(DIRECTORY config cartes launch rviz DESTINATION share/${PROJECT_NAME})
+install(PROGRAMS scripts/pose_initiale.py DESTINATION lib/${PROJECT_NAME})
+ament_package()

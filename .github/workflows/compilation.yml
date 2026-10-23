@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+# Intégration continue : compile tout l'espace de travail et lance les tests dans l'image officielle ROS 2 Jazzy.
+name: compilation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  jazzy:
+    runs-on: ubuntu-24.04
+    container: ros:jazzy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/rosmaster_x3_mecanum_jazzy
+      - name: Code tiers (versions figées)
+        run: |
+          apt-get update && apt-get install -y python3-vcstool
+          vcs import src < src/rosmaster_x3_mecanum_jazzy/dependencies.repos
+      - name: Dépendances
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+      - name: Compilation
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_cohesion+
+      - name: Tests
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --packages-select x3_base
+          colcon test-result --verbose

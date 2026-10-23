@@ -1,0 +1,57 @@
+[
+ {
+  "objectif": "entre les piliers",
+  "resultat": "atteint",
+  "duree_s": 6.6,
+  "trajet_m": 1.41,
+  "ecart_m": 0.051,
+  "ecart_cap_deg": 0.3,
+  "part_crabe": 0.016,
+  "secours": 0,
+  "ecart_loc_m": 0.025
+ },
+ {
+  "objectif": "1,1 m à gauche (crabe utile)",
+  "resultat": "atteint",
+  "duree_s": 10.6,
+  "trajet_m": 1.19,
+  "ecart_m": 0.02,
+  "ecart_cap_deg": 0.8,
+  "part_crabe": 0.204,
+  "secours": 0,
+  "ecart_loc_m": 0.003
+ },
+ {
+  "objectif": "case du haut, tourné à 90°",
+  "resultat": "atteint",
+  "duree_s": 10.4,
+  "trajet_m": 1.9,
+  "ecart_m": 0.015,
+  "ecart_cap_deg": 1.2,
+  "part_crabe": 0.068,
+  "secours": 0,
+  "ecart_loc_m": 0.103
+ },
+ {
+  "objectif": "côté droit, demi-tour",
+  "resultat": "atteint",
+  "duree_s": 16.4,
+  "trajet_m": 2.4,
+  "ecart_m": 0.109,
+  "ecart_cap_deg": 4.0,
+  "part_crabe": 0.127,
+  "secours": 0,
+  "ecart_loc_m": 0.052
+ },
+ {
+  "objectif": "retour au départ",
+  "resultat": "atteint",
+  "duree_s": 23.4,
+  "trajet_m": 4.11,
+  "ecart_m": 0.075,
+  "ecart_cap_deg": 3.8,
+  "part_crabe": 0.111,
+  "secours": 0,
+  "ecart_loc_m": 0.05
+ }
+]

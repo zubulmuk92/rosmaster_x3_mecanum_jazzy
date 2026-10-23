@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>x3_navigation</name>
+  <version>0.1.0</version>
+  <description>Cartographie et navigation Nav2 du ROSMASTER X3</description>
+  <maintainer email="73728454+zubulmuk92@users.noreply.github.com">zubulmuk92</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_mppi_controller</exec_depend>
+  <exec_depend>spatio_temporal_voxel_layer</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
