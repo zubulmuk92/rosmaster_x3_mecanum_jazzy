@@ -41,8 +41,11 @@
           <horizontal>
             <samples>1080</samples>
             <resolution>1</resolution>
-            <min_angle>${-PI}</min_angle>
-            <max_angle>${PI - 2*PI/1080}</max_angle>
+            <!-- Décalé d'un demi-pas : sans ce décalage, deux rayons tombent pile sur des raccords des vues du
+                 gpu_lidar (-135° et -45° de laser_link) et Gazebo y renvoie la distance mesurée 90° plus loin
+                 (faux points qui suivent le robot) -->
+            <min_angle>${-PI + PI/1080}</min_angle>
+            <max_angle>${PI - PI/1080}</max_angle>
           </horizontal>
         </scan>
         <range>
